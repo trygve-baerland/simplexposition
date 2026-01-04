@@ -14,3 +14,4 @@ to start this project:
 * The ideas behind the simplex algorithm are geometrically easy to grasp,
   but how these ideas translate to matrix operations were not straightforward
   for me to wrap my head around.
+  Reading @@cormen2022introduction

@@ -2,3 +2,6 @@
 title = "Simplexposition dump"
 authors = ["trygve-baerland"]
 language = "en"
+
+[preprocessor.bib]
+bibliography = "bibliography.bib"
