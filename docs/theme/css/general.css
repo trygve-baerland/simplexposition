@@ -2,12 +2,12 @@
 
 :root {
     /* Browser default font-size is 16px, this way 1 rem = 10px */
-    font-size: 62.5%;
+    font-size: 100%;
     color-scheme: var(--color-scheme);
 }
 
 html {
-    font-family: "Open Sans", sans-serif;
+    font-family: "CMU Concrete";
     color: var(--fg);
     background-color: var(--bg);
     text-size-adjust: none;
@@ -37,22 +37,48 @@ main {
 }
 
 /* Don't change font size in headers. */
-h1 code, h2 code, h3 code, h4 code, h5 code, h6 code {
+h1 code,
+h2 code,
+h3 code,
+h4 code,
+h5 code,
+h6 code {
     font-size: unset;
 }
 
-.left { float: left; }
-.right { float: right; }
-.boring { opacity: 0.6; }
-.hide-boring .boring { display: none; }
-.hidden { display: none !important; }
+.left {
+    float: left;
+}
 
-h2, h3 { margin-block-start: 2.5em; }
-h4, h5 { margin-block-start: 2em; }
+.right {
+    float: right;
+}
 
-.header + .header h3,
-.header + .header h4,
-.header + .header h5 {
+.boring {
+    opacity: 0.6;
+}
+
+.hide-boring .boring {
+    display: none;
+}
+
+.hidden {
+    display: none !important;
+}
+
+h2,
+h3 {
+    margin-block-start: 2.5em;
+}
+
+h4,
+h5 {
+    margin-block-start: 2em;
+}
+
+.header+.header h3,
+.header+.header h4,
+.header+.header h5 {
     margin-block-start: 1em;
 }
 
@@ -81,40 +107,68 @@ dt:target::before {
 .page {
     outline: 0;
     padding: 0 var(--page-padding);
-    margin-block-start: calc(0px - var(--menu-bar-height)); /* Compensate for the #mdbook-menu-bar-hover-placeholder */
+    margin-block-start: calc(0px - var(--menu-bar-height));
+    /* Compensate for the #mdbook-menu-bar-hover-placeholder */
 }
+
 .page-wrapper {
     box-sizing: border-box;
     background-color: var(--bg);
 }
+
 html:not(.js) .page-wrapper,
 .js:not(.sidebar-resizing) .page-wrapper {
-    transition: margin-left 0.3s ease, transform 0.3s ease; /* Animation: slide away */
+    transition: margin-left 0.3s ease, transform 0.3s ease;
+    /* Animation: slide away */
 }
+
 [dir=rtl]:not(.js) .page-wrapper,
 [dir=rtl].js:not(.sidebar-resizing) .page-wrapper {
-    transition: margin-right 0.3s ease, transform 0.3s ease; /* Animation: slide away */
+    transition: margin-right 0.3s ease, transform 0.3s ease;
+    /* Animation: slide away */
 }
 
 .content {
     overflow-y: auto;
     padding: 0 5px 50px 5px;
 }
+
 .content main {
     margin-inline-start: auto;
     margin-inline-end: auto;
     max-width: var(--content-max-width);
 }
-.content p { line-height: 1.45em; }
-.content ol { line-height: 1.45em; }
-.content ul { line-height: 1.45em; }
-.content a { text-decoration: none; }
-.content a:hover { text-decoration: underline; }
-.content img, .content video { max-width: 100%; }
+
+.content p {
+    line-height: 1.45em;
+}
+
+.content ol {
+    line-height: 1.45em;
+}
+
+.content ul {
+    line-height: 1.45em;
+}
+
+.content a {
+    text-decoration: none;
+}
+
+.content a:hover {
+    text-decoration: underline;
+}
+
+.content img,
+.content video {
+    max-width: 100%;
+}
+
 .content .header:link,
 .content .header:visited {
     color: var(--fg);
 }
+
 .content .header:link,
 .content .header:visited:hover {
     text-decoration: none;
@@ -124,23 +178,29 @@ table {
     margin: 0 auto;
     border-collapse: collapse;
 }
+
 table td {
     padding: 3px 20px;
     border: 1px var(--table-border-color) solid;
 }
+
 table thead {
     background: var(--table-header-bg);
 }
+
 table thead td {
     font-weight: 700;
     border: none;
 }
+
 table thead th {
     padding: 3px 20px;
 }
+
 table thead tr {
     border: 1px var(--table-header-bg) solid;
 }
+
 /* Alternate background colors for rows */
 table tbody tr:nth-child(2n) {
     background: var(--table-alternate-bg);
@@ -207,26 +267,31 @@ sup {
 .footnote-definition {
     font-size: 0.9em;
 }
+
 /* The default spacing for a list is a little too large. */
 .footnote-definition ul,
 .footnote-definition ol {
     padding-left: 20px;
 }
-.footnote-definition > li {
+
+.footnote-definition>li {
     /* Required to position the ::before target */
     position: relative;
 }
-.footnote-definition > li:target {
+
+.footnote-definition>li:target {
     scroll-margin-top: 50vh;
 }
+
 .footnote-reference:target {
     scroll-margin-top: 50vh;
 }
+
 /* Draws a border around the footnote (including the marker) when it is selected.
    TODO: If there are multiple linkbacks, highlight which one you just came
    from so you know which one to click.
 */
-.footnote-definition > li:target::before {
+.footnote-definition>li:target::before {
     border: 2px solid var(--footnote-highlight);
     border-radius: 6px;
     position: absolute;
@@ -237,11 +302,12 @@ sup {
     pointer-events: none;
     content: "";
 }
+
 /* Pulses the footnote reference so you can quickly see where you left off reading.
    This could use some improvement.
 */
 @media not (prefers-reduced-motion) {
-    .footnote-reference:target  {
+    .footnote-reference:target {
         animation: fn-highlight 0.8s;
         border-radius: 2px;
     }
@@ -258,8 +324,10 @@ sup {
     visibility: hidden;
     color: #fff;
     background-color: #333;
-    transform: translateX(-50%); /* Center by moving tooltip 50% of its width left */
-    left: -8px; /* Half of the width of the icon */
+    transform: translateX(-50%);
+    /* Center by moving tooltip 50% of its width left */
+    left: -8px;
+    /* Half of the width of the icon */
     top: -35px;
     font-size: 0.8em;
     text-align: center;
@@ -268,6 +336,7 @@ sup {
     margin: 5px;
     z-index: 1000;
 }
+
 .tooltipped .tooltiptext {
     visibility: visible;
 }
@@ -297,14 +366,16 @@ dt {
 
 /* This uses a CSS counter to add numbers to definitions, but only if there is
  more than one definition. */
-dl, dt {
+dl,
+dt {
     counter-reset: dd-counter;
 }
 
 /* When there is more than one definition, increment the counter. The first
 selector selects the first definition, and the second one selects definitions
 2 and beyond.*/
-dd:has(+ dd), dd + dd {
+dd:has(+ dd),
+dd+dd {
     counter-increment: dd-counter;
     /* Use flex display to help with positioning the numbers when there is a p
     tag inside the definition. */
@@ -314,14 +385,15 @@ dd:has(+ dd), dd + dd {
 
 /* Shows the counter for definitions. The first selector selects the first
 definition, and the second one selections definitions 2 and beyond.*/
-dd:has(+ dd)::before, dd + dd::before  {
+dd:has(+ dd)::before,
+dd+dd::before {
     content: counter(dd-counter) ". ";
     font-weight: 600;
     display: inline-block;
     margin-right: 0.5em;
 }
 
-dd > p {
+dd>p {
     /* For loose definitions that have a p tag inside, don't add a bunch of
     space before the definition. */
     margin-top: 0;
