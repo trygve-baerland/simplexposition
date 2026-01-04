@@ -1,6 +1,6 @@
 # Summary
 
-[Introduction]()
+[Introduction](README.md)
 
 # The simplex algorithm
 - [Problem formulation](simplex/linear_problems.md)
