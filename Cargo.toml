@@ -2,3 +2,5 @@
 resolver = "3"
 members = ["linprogs"]
 
+[workspace.dependencies]
+mdbook = "0.5.2"
