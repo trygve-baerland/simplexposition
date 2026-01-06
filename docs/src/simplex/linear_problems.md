@@ -16,4 +16,8 @@ In math-speak,
 where \\(c \in \mathbb{R}^n \\), \\(A \in \mathbb{R}^{m \times n} \\),
 and \\( b \in \mathbb{R}^m \\).
 
-The \\(x\\) in \eqref{linprog} is the vector of unknowns. 
+The \\(x\\) is the vector of unknowns, and if \eqref{linprog}
+has a unique solution, we'll call the optimal solution \\( x^* \\)
+which acieves the optimal value \\( c^{\intercal}x^* \\).
+
+## Some initial observations
