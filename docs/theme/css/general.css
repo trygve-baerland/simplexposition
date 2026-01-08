@@ -31,6 +31,17 @@ main {
     overflow-wrap: break-word;
 }
 
+svg {
+    overflow: visible;
+
+    foreignObject {
+        display: block;
+        font-size: 0.8px;
+        width: 100%;
+        height: 100%;
+    }
+}
+
 /* make wide tables scroll if they overflow */
 .table-wrapper {
     overflow-x: auto;

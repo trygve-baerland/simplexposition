@@ -7,7 +7,7 @@ In math-speak,
 \begin{equation}
 \label{linprog}
   \begin{cases}
-    \underset{x \in \mathbb{R}^n}{\mathrm{min}} \ c^{\intercal}x \\\\
+    \underset{x \in \mathbb{R}^n}{\mathrm{min}} \ c^{\top}x \\\\
     A x = b \\\\
     x \geq 0
   \end{cases}
@@ -18,6 +18,6 @@ and \\( b \in \mathbb{R}^m \\).
 
 The \\(x\\) is the vector of unknowns, and if \eqref{linprog}
 has a unique solution, we'll call the optimal solution \\( x^* \\)
-which acieves the optimal value \\( c^{\intercal}x^* \\).
+which acieves the optimal value \\( c^{\top}x^* \\).
 
 ## Some initial observations
