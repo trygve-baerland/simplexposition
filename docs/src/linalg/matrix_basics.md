@@ -82,7 +82,18 @@ For \\( p^* \\), we add and subtract \\( v^\top p^* \\) to find that
 In the last step we used that \\( p^* \\) is on the plane,
 and so \\( v\top (p^* - p) = 0 \\).
 
-Another observation is 
+A plane bisects \\( \mathbb{R}^n \\) into two half-spaces.
+That is, any point in \\( \mathbb{R}^n \\) is either on the plane,
+is below it, or is above it.
+Moreover, the equation \eqref{plane-definition} separates these half-spaces.
+
+> [!IMPORTANT]
+> A plane splits \\( \mathbb{R}^n \\) into the half-spaces described by
+> \\( v^\top x \leq v^\top p \\) and
+> \\( v^\top x \geq v^\top p \\).
+
+Looking back at our previous example, we can mark these regions with
+what relation holds where.
 
 <svg width="75%" height="500" viewBox="-1 -1 12 12" xmlns="http://www.w3.org/2000/svg" xmlns:xhtml="http://www.w3.org/2000/xhtml">
 
