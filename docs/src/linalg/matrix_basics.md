@@ -113,15 +113,65 @@ what relation holds where.
   <text x="4" y="6" font-size="1" fill="var(--fg)" font-style="italic">p</text>
   <text x="7.5" y="3" font-size="1" fill="var(--fg)" font-style="italic">v</text>
 
-  <foreignObject x="1" y="7" width="5" height="1.5">
+  <foreignObject x="0" y="7" width="5" height="1">
     <xhtml:div> 
-      \( {v}^{\top} x \leq v^{\top}p \)
+      \[ {v}^{\top} x \leq v^{\top}p \]
     </xhtml:div>
   </foreignObject>
 
-  <foreignObject x="5" y="0" width="5" height="1.5">
+  <foreignObject x="5" y="0" width="5" height="1">
     <xhtml:div>
-      \( {v}^{\top} x \geq v^{\top}p \)
+      \[ {v}^{\top} x \geq v^{\top}p \]
     </xhtml:div>
   </foreignObject>
 </svg>
+
+## Set of planes as a convex polygon
+
+Keeping in mind that a plane bisects the space it sits in into
+two half-spaces, we now consider the intersection of a set of such
+half-spaces.
+
+That is, we are given a set of vector, \\( v_1, v_2, \ldots, v_m \\),
+and points, \\( p_1, p_2, \ldots, p_m \\),
+and we want to say something about which \\( x \in \mathbb{R}^n \\)
+are contained in all the half-spaces
+
+\begin{align*}
+  v_1^\top x &\leq v_1^\top p_1, \\\\
+  v_2^\top x &\leq v_2^\top p_2, \\\\
+  &\cdots \\\\
+  v_m^\top x &\leq v_m^\top p_m.
+\end{align*}
+
+First of all, we collect the above inequalities into
+the matrix inequality
+
+\begin{equation}
+  \label{matrix-inequality}
+  A x = b.
+\end{equation}
+
+Here, \\( A \in \mathbb{R}^{m \times n} \\) is given as
+
+\\[
+  A = \begin{pmatrix}
+    v_1^\top \\\\
+    v_2^\top \\\\
+    \vdots   \\\\
+    v_m^\top \\\\
+  \end{pmatrix},
+\\]
+
+i.e. **each row of \\( A \\) is one of the vectors describing a bounding plane.**
+
+Similarly, \\( b \in \mathbb{R}^m \\) is 
+
+\\[
+  b = \begin{pmatrix}
+    v_1^\top p_1 \\\\
+    v_2^\top p_2 \\\\
+    \vdots       \\\\
+    v_m^\top p_m
+  \end{pmatrix}.
+\\]
