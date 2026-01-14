@@ -8,3 +8,5 @@ bibliography = "bibliography.bib"
 
 [output.html]
 mathjax-support = true
+default-theme = "Rust"
+admonitions = true

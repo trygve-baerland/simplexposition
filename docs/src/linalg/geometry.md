@@ -22,7 +22,7 @@ Here, we've taken \\( n = 2\\),
 The stapled line marks the points that constitute the plane
 described by \\(p\\) and \\(v\\).
 
-<svg width="75%" height="500" viewBox="-1 -1 12 12" xmlns="http://www.w3.org/2000/svg">
+<svg width="100%" height="500" viewBox="-1 -1 12 12" xmlns="http://www.w3.org/2000/svg">
 
   <!-- Axes -->
   <line x1="-1" y1="10" x2="10" y2="10" stroke="var(--fg)" stroke-width="0.1" marker-end="url(#arrowhead)"/>
@@ -95,7 +95,7 @@ Moreover, the equation \eqref{plane-definition} separates these half-spaces.
 Looking back at our previous example, we can mark these regions with
 what relation holds where.
 
-<svg width="75%" height="500" viewBox="-1 -1 12 12" xmlns="http://www.w3.org/2000/svg" xmlns:xhtml="http://www.w3.org/2000/xhtml">
+<svg width="100%" height="500" viewBox="-1 -1 12 12" xmlns="http://www.w3.org/2000/svg" xmlns:xhtml="http://www.w3.org/2000/xhtml">
 
   <!-- Axes -->
   <line x1="-1" y1="10" x2="10" y2="10" stroke="var(--fg)" stroke-width="0.1" marker-end="url(#arrowhead)"/>
@@ -175,6 +175,56 @@ Similarly, \\( b \in \mathbb{R}^m \\) is
     v_m^\top p_m
   \end{pmatrix}.
 \\]
+
+To interpret \eqref{matrix-inequality} geometrically, we note that for \\( x \\)
+satisfies \eqref{matrix-inequality} it must satisfy each row inequality.
+So the set of all such \\( x \\) is the intersection of all half-spaces,
+each of which is described by a row of \eqref{matrix-inequality},
+and so the matrix inequality describes a convex polygon.
+
+Let's look at an example.
+Again, we'll use \\( n = 2 \\) for easier visualization, and consider
+
+\\[
+  A = \begin{pmatrix}
+    0 & 1 \\\\
+    1 & 1 \\\\
+    1 & 0 \\\\
+  \end{pmatrix},
+  \quad
+  b = \begin{pmatrix}
+    5 \\\\
+    8 \\\\
+    5
+  \end{pmatrix}
+\\]
+
+
+<svg width="100%" height="500" viewBox="-1 -1 12 12" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Axes -->
+  <line x1="-1" y1="10" x2="10" y2="10" stroke="var(--fg)" stroke-width="0.1" marker-end="url(#arrowhead)"/>
+  <line x1="0" y1="11" x2="0" y2="0" stroke="var(--fg)" stroke-width="0.1" marker-end="url(#arrowhead)"/>
+
+  <!-- Boundary -->
+  <path d="M 0 5 H 3 L 5 7 V 10 H 0 Z" stroke="var(--fg)" stroke-width="0.1" fill="var(--quote-bg)" />
+  <foreignObject x="-3.5" y="6.35" width="5" height="1">
+    <xhtml:div>
+      \[ A x \leq b \]
+    </xhtml:div>
+  </foreignObject>
+
+  <!-- Line continuations -->
+  <line x1="3.2" y1="5" x2="10" y2="5" stroke="var(--fg)" stroke-width="0.1" stroke-dasharray="0.4 0.25"/>
+
+  <line x1="0.2" y1="2.2" x2="2.8" y2="4.8" stroke="var(--fg)" stroke-width="0.1" stroke-dasharray="0.4 0.25"/>
+
+  <line x1="5.2" y1="7.2" x2="8" y2="10" stroke="var(--fg)" stroke-width="0.1" stroke-dasharray="0.4 0.25" />
+
+  <line x1="5" y1="0" x2="5" y2="6.8" stroke="var(--fg)" stroke-width="0.1" stroke-dasharray="0.4 0.2" />
+
+  
+</svg>
 
 ## Now what?
 
