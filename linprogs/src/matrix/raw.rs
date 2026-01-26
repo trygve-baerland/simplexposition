@@ -1,14 +1,14 @@
 use anyhow::{Result, anyhow};
 
 #[derive(Debug)]
-pub struct RawMatrix<'a> {
-    values: &'a [f64],
+pub struct RawMatrix {
+    values: Vec<f64>,
     n: usize,
     m: usize,
 }
 
-impl<'a> RawMatrix<'a> {
-    pub fn try_new(values: &'a [f64], n: usize, m: usize) -> Result<RawMatrix<'a>> {
+impl<'a> RawMatrix {
+    pub fn try_new(values: Vec<f64>, n: usize, m: usize) -> Result<RawMatrix> {
         if values.len() != n * m {
             return Err(anyhow!(
                 "dimension mismatch: {} != {} * {}",
@@ -30,12 +30,28 @@ impl<'a> RawMatrix<'a> {
         self.m
     }
 
+    /// Return the underlying values of the matrix
+    pub fn values(&self) -> &[f64] {
+        &self.values
+    }
+
     /// Return the i'th row of the matrix
     pub fn row(&self, i: usize) -> Result<&[f64]> {
         if i >= self.m {
             return Err(anyhow!("row index {} out of bounds", i));
         }
         Ok(&self.values[self.m * i..(self.m * i + self.n)])
+    }
+
+    /// Scale a row in the matrix in-place.
+    pub fn scale_row(&mut self, i: usize, scale: f64) -> Result<()> {
+        if i > self.m {
+            return Err(anyhow!("row index {} out of bounds", i));
+        }
+        for jx in 0..self.n {
+            self.values[self.m * i + jx] = self.values[self.m * i + jx] * scale
+        }
+        Ok(())
     }
 }
 
@@ -47,21 +63,21 @@ mod tests {
 
     #[test]
     fn try_new_valid() {
-        let values: &[f64] = &[1., 2., 3., 4.];
-        assert!(RawMatrix::try_new(values, 2, 2).is_ok());
+        let values = [1., 2., 3., 4.];
+        assert!(RawMatrix::try_new(values.into(), 2, 2).is_ok());
     }
 
     #[test]
     fn try_new_invalid() {
-        let values: &[f64] = &[1., 2., 3., 4.];
-        assert!(RawMatrix::try_new(values, 3, 1).is_err());
+        let values = [1., 2., 3., 4.];
+        assert!(RawMatrix::try_new(values.into(), 3, 1).is_err());
     }
 
     #[test]
     fn row_valid() {
-        let values: &[f64] = &[1., 2., 3., 4.];
+        let values = [1., 2., 3., 4.];
 
-        let mat = RawMatrix::try_new(values, 2, 2).unwrap();
+        let mat = RawMatrix::try_new(values.into(), 2, 2).unwrap();
         let expected = [3., 4.];
 
         let row = mat.row(1);
@@ -77,11 +93,28 @@ mod tests {
 
     #[test]
     fn row_invalid_index() {
-        let values: &[f64] = &[1., 2., 3., 4.];
+        let values = [1., 2., 3., 4.];
 
-        let mat = RawMatrix::try_new(values, 2, 2).unwrap();
+        let mat = RawMatrix::try_new(values.into(), 2, 2).unwrap();
 
         let row = mat.row(2);
         assert!(row.is_err());
+    }
+
+    #[test]
+    fn scale_row() {
+        let values = [1., 2., 3., 4.];
+
+        let mut mat = RawMatrix::try_new(values.into(), 2, 2).unwrap();
+
+        assert!(mat.scale_row(1, 3.).is_ok());
+
+        let expected = [1., 2., 9., 12.];
+        assert!(
+            mat.values
+                .iter()
+                .zip(expected)
+                .all(|(a, e)| (a - e).abs() < EPS)
+        );
     }
 }
