@@ -43,13 +43,33 @@ impl<'a> RawMatrix {
         Ok(&self.values[self.m * i..(self.m * i + self.n)])
     }
 
-    /// Scale a row in the matrix in-place.
-    pub fn scale_row(&mut self, i: usize, scale: f64) -> Result<()> {
-        if i > self.m {
+    /// Return a mut reference to the i'th row.
+    fn row_mut(&mut self, i: usize) -> Result<&mut [f64]> {
+        if i >= self.m {
             return Err(anyhow!("row index {} out of bounds", i));
         }
-        for jx in 0..self.n {
-            self.values[self.m * i + jx] = self.values[self.m * i + jx] * scale
+        Ok(&mut self.values[self.m * i..(self.m * i + self.n)])
+    }
+
+    /// Scale a row in the matrix in-place.
+    pub fn scale_row(&mut self, i: usize, scale: f64) -> Result<()> {
+        for v in self.row_mut(i)? {
+            *v *= scale
+        }
+        Ok(())
+    }
+
+    pub fn add_row(&mut self, i: usize, to_add: &[f64]) -> Result<()> {
+        if to_add.len() != self.n {
+            return Err(anyhow!(
+                "to_add is wrong dimension: {} != {}",
+                to_add.len(),
+                self.n
+            ));
+        }
+
+        for (v, a) in self.row_mut(i)?.iter_mut().zip(to_add) {
+            *v += a
         }
         Ok(())
     }
@@ -57,6 +77,8 @@ impl<'a> RawMatrix {
 
 #[cfg(test)]
 mod tests {
+    use crate::matrix::utils;
+
     use super::*;
 
     const EPS: f64 = 1E-8;
@@ -116,5 +138,18 @@ mod tests {
                 .zip(expected)
                 .all(|(a, e)| (a - e).abs() < EPS)
         );
+    }
+
+    #[test]
+    fn add_to_row() {
+        let values = [1., 2., 3., 4.];
+
+        let mut mat = RawMatrix::try_new(values.into(), 2, 2).unwrap();
+        let to_add = &[3., 3.];
+
+        assert!(mat.add_row(0, to_add).is_ok());
+
+        let expected = [4., 5., 3., 4.];
+        utils::assert_mat_eq(&mat, &expected);
     }
 }
