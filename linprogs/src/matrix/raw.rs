@@ -1,6 +1,9 @@
 use anyhow::{Result, anyhow};
 
-use crate::matrix::{Vector, vector::MutRefVector};
+use crate::matrix::{
+    Matrix, Vector,
+    vector::{MutRefVector, MutVector, RefVector},
+};
 
 #[derive(Debug)]
 pub struct RawMatrix {
@@ -22,50 +25,56 @@ impl RawMatrix {
         Ok(RawMatrix { values, n, m })
     }
 
-    /// Return the number of columns in the matrix
-    pub fn n(&self) -> usize {
-        self.n
-    }
-
-    /// Return the number of rows in the matrix
-    pub fn m(&self) -> usize {
-        self.m
-    }
-
-    /// Return the underlying values of the matrix
-    pub fn values(&self) -> &[f64] {
-        &self.values
-    }
-
-    /// Return the i'th row of the matrix
-    pub fn row(&self, i: usize) -> Result<&[f64]> {
-        if i >= self.m {
-            return Err(anyhow!("row index {} out of bounds", i));
-        }
-        Ok(&self.values[self.m * i..(self.m * i + self.n)])
-    }
-
-    /// Return a mut reference to the i'th row.
-    fn row_mut(&'_ mut self, i: usize) -> Result<MutRefVector<'_>> {
-        if i >= self.m {
-            return Err(anyhow!("row index {} out of bounds", i));
-        }
-        Ok((&mut self.values[self.m * i..(self.m * i + self.n)]).into())
-    }
-
     /// Scale a row in the matrix in-place.
     pub fn scale_row(&mut self, i: usize, scale: f64) -> Result<()> {
-        self.row_mut(i)?.scale(scale)
+        match self.row_mut(i) {
+            Some(mut row) => row.scale(scale),
+            None => Err(anyhow!("row index {} is out of bounds", i)),
+        }
     }
 
     pub fn add_row<T: Vector>(&mut self, i: usize, to_add: T) -> Result<()> {
-        self.row_mut(i)?.add(to_add)
+        match self.row_mut(i) {
+            Some(mut row) => row.add(to_add),
+            None => Err(anyhow!("row index {} is out of bounds", i)),
+        }
+    }
+}
+
+impl Matrix for RawMatrix {
+    /// Return the underlying values of the matrix
+    fn values(&self) -> &[f64] {
+        &self.values
+    }
+    fn m(&self) -> usize {
+        self.m
+    }
+
+    fn n(&self) -> usize {
+        self.n
+    }
+
+    fn row<'a>(&'a self, i: usize) -> Option<RefVector<'a>> {
+        if i >= self.m {
+            return None;
+        }
+        Some(self.values[self.m * i..(self.m * i + self.n)].into())
+    }
+
+    fn row_mut<'a>(&'a mut self, i: usize) -> Option<MutRefVector<'a>> {
+        if i >= self.m {
+            return None;
+        }
+        Some((&mut self.values[self.m * i..(self.m * i + self.n)]).into())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::matrix::{utils, vector::OwnedVector};
+    use crate::matrix::{
+        utils::{self, assert_vec_eq},
+        vector::OwnedVector,
+    };
 
     use super::*;
 
@@ -88,17 +97,13 @@ mod tests {
         let values = [1., 2., 3., 4.];
 
         let mat = RawMatrix::try_new(values.into(), 2, 2).unwrap();
-        let expected = [3., 4.];
+        let expected = &[3., 4.];
 
         let row = mat.row(1);
-        assert!(row.is_ok());
+        assert!(row.is_some());
         let row = row.unwrap();
 
-        assert!(
-            row.iter()
-                .zip(expected.iter())
-                .all(|(a, e)| (a - e).abs() < EPS)
-        );
+        assert_vec_eq(&row, expected);
     }
 
     #[test]
@@ -108,7 +113,7 @@ mod tests {
         let mat = RawMatrix::try_new(values.into(), 2, 2).unwrap();
 
         let row = mat.row(2);
-        assert!(row.is_err());
+        assert!(row.is_none());
     }
 
     #[test]

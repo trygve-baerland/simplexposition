@@ -3,9 +3,19 @@ use anyhow::{Result, anyhow};
 pub trait Vector {
     fn values(&self) -> &[f64];
 
-    fn values_mut(&mut self) -> &mut [f64];
-
     fn n(&self) -> usize;
+
+    fn get(&self, index: usize) -> Option<f64> {
+        self.values().get(index).copied()
+    }
+
+    fn get_unchecked(&self, index: usize) -> f64 {
+        self.values()[index]
+    }
+}
+
+pub trait MutVector: Vector {
+    fn values_mut(&mut self) -> &mut [f64];
 
     fn scale(&mut self, scale: f64) -> Result<()> {
         for v in self.values_mut() {
@@ -65,7 +75,9 @@ impl Vector for OwnedVector {
     fn values(&self) -> &[f64] {
         &self.values
     }
+}
 
+impl MutVector for OwnedVector {
     fn values_mut(&mut self) -> &mut [f64] {
         self.values.as_mut_slice()
     }
@@ -86,8 +98,30 @@ impl<'a> Vector for MutRefVector<'a> {
     fn values(&self) -> &[f64] {
         self.values
     }
+    fn n(&self) -> usize {
+        self.values.len()
+    }
+}
 
+impl<'a> MutVector for MutRefVector<'a> {
     fn values_mut(&mut self) -> &mut [f64] {
+        self.values
+    }
+}
+
+#[derive(Debug)]
+pub struct RefVector<'a> {
+    values: &'a [f64],
+}
+
+impl<'a> From<&'a [f64]> for RefVector<'a> {
+    fn from(value: &'a [f64]) -> Self {
+        Self { values: value }
+    }
+}
+
+impl<'a> Vector for RefVector<'a> {
+    fn values(&self) -> &[f64] {
         self.values
     }
 
@@ -129,6 +163,18 @@ mod tests {
 
             let result = OwnedVector::from(values);
             assert_vec_eq(&result, &[1., 2., 3.])
+        }
+    }
+
+    mod ref_vector {
+        use super::*;
+
+        #[test]
+        fn from_slice() {
+            let values: &[f64] = &[1., 2., 3.];
+
+            let result = RefVector::from(values);
+            assert_vec_eq(&result, values);
         }
     }
 }
