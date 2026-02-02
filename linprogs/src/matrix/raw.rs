@@ -1,6 +1,6 @@
 use anyhow::{Result, anyhow};
 
-use crate::matrix::{Vector, vector::SliceMutRef};
+use crate::matrix::{Vector, vector::MutRefVector};
 
 #[derive(Debug)]
 pub struct RawMatrix {
@@ -9,7 +9,7 @@ pub struct RawMatrix {
     m: usize,
 }
 
-impl<'a> RawMatrix {
+impl RawMatrix {
     pub fn try_new(values: Vec<f64>, n: usize, m: usize) -> Result<RawMatrix> {
         if values.len() != n * m {
             return Err(anyhow!(
@@ -46,7 +46,7 @@ impl<'a> RawMatrix {
     }
 
     /// Return a mut reference to the i'th row.
-    fn row_mut(&'_ mut self, i: usize) -> Result<SliceMutRef<'_>> {
+    fn row_mut(&'_ mut self, i: usize) -> Result<MutRefVector<'_>> {
         if i >= self.m {
             return Err(anyhow!("row index {} out of bounds", i));
         }

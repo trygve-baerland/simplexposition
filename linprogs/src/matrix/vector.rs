@@ -1,20 +1,20 @@
 use anyhow::{Result, anyhow};
 
 pub trait Vector {
-    fn values<'a>(&'a self) -> &'a [f64];
+    fn values(&self) -> &[f64];
 
-    fn values_mut<'a>(&'a mut self) -> &'a mut [f64];
+    fn values_mut(&mut self) -> &mut [f64];
 
     fn n(&self) -> usize;
 
-    fn scale<'a>(&'a mut self, scale: f64) -> Result<()> {
+    fn scale(&mut self, scale: f64) -> Result<()> {
         for v in self.values_mut() {
-            *v *= scale
+            *v *= scale;
         }
         Ok(())
     }
 
-    fn add<'a, T: Vector>(&'a mut self, to_add: T) -> Result<()> {
+    fn add<T: Vector>(&mut self, to_add: T) -> Result<()> {
         if to_add.n() != self.n() {
             return Err(anyhow!(
                 "to_add is wrong dimension: {} != {}",
@@ -23,12 +23,13 @@ pub trait Vector {
             ));
         }
         for (v, a) in self.values_mut().iter_mut().zip(to_add.values()) {
-            *v += a
+            *v += a;
         }
         Ok(())
     }
 }
 
+#[allow(unused)]
 #[derive(Debug)]
 pub struct OwnedVector {
     values: Vec<f64>,
@@ -61,32 +62,32 @@ impl Vector for OwnedVector {
         self.values.len()
     }
 
-    fn values<'a>(&'a self) -> &'a [f64] {
+    fn values(&self) -> &[f64] {
         &self.values
     }
 
-    fn values_mut<'a>(&'a mut self) -> &'a mut [f64] {
+    fn values_mut(&mut self) -> &mut [f64] {
         self.values.as_mut_slice()
     }
 }
 
 #[derive(Debug)]
-pub struct SliceMutRef<'a> {
+pub struct MutRefVector<'a> {
     values: &'a mut [f64],
 }
 
-impl<'a> From<&'a mut [f64]> for SliceMutRef<'a> {
+impl<'a> From<&'a mut [f64]> for MutRefVector<'a> {
     fn from(value: &'a mut [f64]) -> Self {
         Self { values: value }
     }
 }
 
-impl<'a> Vector for SliceMutRef<'a> {
-    fn values<'b>(&'b self) -> &'b [f64] {
+impl<'a> Vector for MutRefVector<'a> {
+    fn values(&self) -> &[f64] {
         self.values
     }
 
-    fn values_mut<'b>(&'b mut self) -> &'b mut [f64] {
+    fn values_mut(&mut self) -> &mut [f64] {
         self.values
     }
 
@@ -112,6 +113,22 @@ mod tests {
 
             let result = OwnedVector::from(values);
             assert_vec_eq(&result, expected);
+        }
+
+        #[test]
+        fn from_slice() {
+            let values = &[1., 2., 3.];
+
+            let result = OwnedVector::from(values.as_slice());
+            assert_vec_eq(&result, values);
+        }
+
+        #[test]
+        fn from_array() {
+            let values = [1., 2., 3.];
+
+            let result = OwnedVector::from(values);
+            assert_vec_eq(&result, &[1., 2., 3.])
         }
     }
 }
