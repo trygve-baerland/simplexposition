@@ -1,6 +1,6 @@
 use anyhow::{Result, anyhow};
 
-use crate::matrix::vector::SliceMutRef;
+use crate::matrix::{Vector, vector::SliceMutRef};
 
 #[derive(Debug)]
 pub struct RawMatrix {
@@ -58,25 +58,14 @@ impl<'a> RawMatrix {
         self.row_mut(i)?.scale(scale)
     }
 
-    pub fn add_row(&mut self, i: usize, to_add: &[f64]) -> Result<()> {
-        if to_add.len() != self.n {
-            return Err(anyhow!(
-                "to_add is wrong dimension: {} != {}",
-                to_add.len(),
-                self.n
-            ));
-        }
-
-        for (v, a) in self.row_mut(i)?.iter_mut().zip(to_add) {
-            *v += a
-        }
-        Ok(())
+    pub fn add_row<T: Vector>(&mut self, i: usize, to_add: T) -> Result<()> {
+        self.row_mut(i)?.add(to_add)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::matrix::utils;
+    use crate::matrix::{utils, vector::OwnedVector};
 
     use super::*;
 
@@ -144,7 +133,7 @@ mod tests {
         let values = [1., 2., 3., 4.];
 
         let mut mat = RawMatrix::try_new(values.into(), 2, 2).unwrap();
-        let to_add = &[3., 3.];
+        let to_add: OwnedVector = [3., 3.].into();
 
         assert!(mat.add_row(0, to_add).is_ok());
 
