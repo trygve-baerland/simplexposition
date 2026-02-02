@@ -1,5 +1,7 @@
 use anyhow::{Result, anyhow};
 
+use crate::matrix::vector::SliceMutRef;
+
 #[derive(Debug)]
 pub struct RawMatrix {
     values: Vec<f64>,
@@ -44,19 +46,16 @@ impl<'a> RawMatrix {
     }
 
     /// Return a mut reference to the i'th row.
-    fn row_mut(&mut self, i: usize) -> Result<&mut [f64]> {
+    fn row_mut(&'_ mut self, i: usize) -> Result<SliceMutRef<'_>> {
         if i >= self.m {
             return Err(anyhow!("row index {} out of bounds", i));
         }
-        Ok(&mut self.values[self.m * i..(self.m * i + self.n)])
+        Ok((&mut self.values[self.m * i..(self.m * i + self.n)]).into())
     }
 
     /// Scale a row in the matrix in-place.
     pub fn scale_row(&mut self, i: usize, scale: f64) -> Result<()> {
-        for v in self.row_mut(i)? {
-            *v *= scale
-        }
-        Ok(())
+        self.row_mut(i)?.scale(scale)
     }
 
     pub fn add_row(&mut self, i: usize, to_add: &[f64]) -> Result<()> {

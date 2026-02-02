@@ -1,6 +1,8 @@
 mod raw;
+mod vector;
 
 pub use raw::RawMatrix;
+pub use vector::Vector;
 
 #[cfg(test)]
 mod utils {
