@@ -1,6 +1,7 @@
 mod raw;
 mod vector;
 
+use anyhow::Result;
 pub use raw::RawMatrix;
 pub use vector::Vector;
 
@@ -19,8 +20,24 @@ pub trait Matrix {
     /// Returns a readonly view of a row in the matrix
     fn row<'a>(&'a self, i: usize) -> Option<RefVector<'a>>;
 
+    /// Returns an iterator over all rows in the matrix
+    fn rows<'a>(&'a self) -> impl Iterator<Item = RefVector<'a>> {
+        (0..self.m()).map(|i| self.row(i).unwrap())
+    }
+
     /// Returns a writable view of a row in the matrix
     fn row_mut<'a>(&'a mut self, i: usize) -> Option<MutRefVector<'a>>;
+
+    /// Transform all rows in the matrix using some func
+    fn mutate_rows<'a, F>(&'a mut self, func: F) -> Result<()>
+    where
+        F: Fn(usize, MutRefVector<'_>) -> Result<()>,
+    {
+        for i in 0..self.m() {
+            func(i, self.row_mut(i).unwrap())?;
+        }
+        Ok(())
+    }
 
     /// Returns the value of a given element in the matrix
     fn get(&self, i: usize, j: usize) -> Option<f64> {

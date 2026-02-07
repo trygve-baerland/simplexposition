@@ -5,4 +5,5 @@ members = ["linprogs"]
 [workspace.dependencies]
 mdbook = "0.5.2"
 anyhow = "1.0.100"
+num = "0.4.3"
 

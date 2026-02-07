@@ -72,13 +72,13 @@ impl Matrix for RawMatrix {
 #[cfg(test)]
 mod tests {
     use crate::matrix::{
-        utils::{self, assert_vec_eq},
+        utils::{self, assert_mat_eq, assert_vec_eq},
         vector::OwnedVector,
     };
 
-    use super::*;
+    use num::ToPrimitive;
 
-    const EPS: f64 = 1E-8;
+    use super::*;
 
     #[test]
     fn try_new_valid() {
@@ -125,12 +125,7 @@ mod tests {
         assert!(mat.scale_row(1, 3.).is_ok());
 
         let expected = [1., 2., 9., 12.];
-        assert!(
-            mat.values
-                .iter()
-                .zip(expected)
-                .all(|(a, e)| (a - e).abs() < EPS)
-        );
+        assert_mat_eq(&mat, &expected);
     }
 
     #[test]
@@ -144,5 +139,23 @@ mod tests {
 
         let expected = [4., 5., 3., 4.];
         utils::assert_mat_eq(&mat, &expected);
+    }
+
+    #[test]
+    fn scale_all_rows() {
+        let values = [1., 2., 3., 4.];
+
+        let mut mat = RawMatrix::try_new(values.into(), 2, 2).unwrap();
+
+        assert!(
+            mat.mutate_rows(|i, mut row| {
+                let scale: f64 = 2.0 * (i + 1).to_f64().expect("should be valid");
+                row.scale(scale)
+            })
+            .is_ok()
+        );
+
+        let expected = [2., 4., 12., 16.];
+        assert_mat_eq(&mat, &expected);
     }
 }
