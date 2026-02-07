@@ -5,7 +5,7 @@ use anyhow::{Result, anyhow};
 pub use raw::RawMatrix;
 pub use vector::{MutVector, Vector};
 
-use crate::matrix::vector::{MutRefVector, OwnedVector, RefVector};
+use crate::matrix::vector::{MutRefVector, OwnedVector};
 
 const EPS: f64 = 1E-8;
 
@@ -20,23 +20,23 @@ pub trait Matrix {
     fn n(&self) -> usize;
 
     /// Returns a readonly view of a row in the matrix
-    fn row<'a>(&'a self, i: usize) -> Option<RefVector<'a>>;
+    fn row(&self, i: usize) -> Option<impl Vector>;
 
     /// Returns a copy of the i'th row of the matrix
     fn row_owned(&self, i: usize) -> Result<OwnedVector> {
         if let Some(row) = self.row(i) {
-            return Ok(row.into());
+            return Ok(row.values().into());
         }
         Err(anyhow!("invalid row index {}", i))
     }
 
     /// Returns an iterator over all rows in the matrix
-    fn rows<'a>(&'a self) -> impl Iterator<Item = RefVector<'a>> {
+    fn rows(&self) -> impl Iterator<Item = impl Vector> {
         (0..self.m()).map(|i| self.row(i).unwrap())
     }
 
     /// Returns a writable view of a row in the matrix
-    fn row_mut<'a>(&'a mut self, i: usize) -> Option<MutRefVector<'a>>;
+    fn row_mut(&mut self, i: usize) -> Option<impl MutVector>;
 
     /// Transform all rows in the matrix using some func
     fn mutate_rows<F>(&mut self, func: F) -> Result<()>
@@ -44,7 +44,7 @@ pub trait Matrix {
         F: Fn(usize, MutRefVector<'_>) -> Result<()>,
     {
         for i in 0..self.m() {
-            func(i, self.row_mut(i).unwrap())?;
+            func(i, self.row_mut(i).unwrap().values_mut().into())?;
         }
         Ok(())
     }

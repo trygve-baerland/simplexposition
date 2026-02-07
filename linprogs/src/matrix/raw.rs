@@ -54,18 +54,22 @@ impl Matrix for RawMatrix {
         self.n
     }
 
-    fn row<'a>(&'a self, i: usize) -> Option<RefVector<'a>> {
+    fn row(&self, i: usize) -> Option<impl Vector> {
         if i >= self.m {
             return None;
         }
-        Some(self.values[self.m * i..(self.m * i + self.n)].into())
+        Some(RefVector::from(
+            &self.values[self.m * i..(self.m * i + self.n)],
+        ))
     }
 
-    fn row_mut<'a>(&'a mut self, i: usize) -> Option<MutRefVector<'a>> {
+    fn row_mut(&mut self, i: usize) -> Option<impl MutVector> {
         if i >= self.m {
             return None;
         }
-        Some((&mut self.values[self.m * i..(self.m * i + self.n)]).into())
+        Some(MutRefVector::from(
+            &mut self.values[self.m * i..(self.m * i + self.n)],
+        ))
     }
 }
 
