@@ -158,4 +158,16 @@ mod tests {
         let expected = [2., 4., 12., 16.];
         assert_mat_eq(&mat, &expected);
     }
+
+    #[test]
+    fn pivot() {
+        let values = [1., 2., 3., 4.];
+
+        let mut mat = RawMatrix::try_new(values.into(), 2, 2).unwrap();
+
+        assert!(mat.pivot(1, 0).is_ok());
+
+        let expected = [0.0, 2. / 3., 1., 4. / 3.];
+        assert_mat_eq(&mat, &expected);
+    }
 }

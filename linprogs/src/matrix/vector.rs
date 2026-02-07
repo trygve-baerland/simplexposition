@@ -1,3 +1,5 @@
+use std::ops::Mul;
+
 use anyhow::{Result, anyhow};
 
 pub trait Vector {
@@ -67,6 +69,14 @@ impl<const N: usize> From<[f64; N]> for OwnedVector {
     }
 }
 
+impl<'a> From<RefVector<'a>> for OwnedVector {
+    fn from(value: RefVector<'a>) -> Self {
+        Self {
+            values: value.values().into(),
+        }
+    }
+}
+
 impl Vector for OwnedVector {
     fn n(&self) -> usize {
         self.values.len()
@@ -80,6 +90,22 @@ impl Vector for OwnedVector {
 impl MutVector for OwnedVector {
     fn values_mut(&mut self) -> &mut [f64] {
         self.values.as_mut_slice()
+    }
+}
+
+impl FromIterator<f64> for OwnedVector {
+    fn from_iter<T: IntoIterator<Item = f64>>(iter: T) -> Self {
+        Self {
+            values: iter.into_iter().collect(),
+        }
+    }
+}
+
+impl Mul<f64> for &OwnedVector {
+    type Output = OwnedVector;
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        self.values().iter().copied().map(|el| rhs * el).collect()
     }
 }
 

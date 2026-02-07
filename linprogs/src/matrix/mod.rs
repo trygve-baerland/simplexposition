@@ -1,11 +1,13 @@
 mod raw;
 mod vector;
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 pub use raw::RawMatrix;
-pub use vector::Vector;
+pub use vector::{MutVector, Vector};
 
-use crate::matrix::vector::{MutRefVector, RefVector};
+use crate::matrix::vector::{MutRefVector, OwnedVector, RefVector};
+
+const EPS: f64 = 1E-8;
 
 pub trait Matrix {
     /// Returns all elements in the matrix as a flattened slice
@@ -20,6 +22,14 @@ pub trait Matrix {
     /// Returns a readonly view of a row in the matrix
     fn row<'a>(&'a self, i: usize) -> Option<RefVector<'a>>;
 
+    /// Returns a copy of the i'th row of the matrix
+    fn row_owned(&self, i: usize) -> Result<OwnedVector> {
+        if let Some(row) = self.row(i) {
+            return Ok(row.into());
+        }
+        Err(anyhow!("invalid row index {}", i))
+    }
+
     /// Returns an iterator over all rows in the matrix
     fn rows<'a>(&'a self) -> impl Iterator<Item = RefVector<'a>> {
         (0..self.m()).map(|i| self.row(i).unwrap())
@@ -29,7 +39,7 @@ pub trait Matrix {
     fn row_mut<'a>(&'a mut self, i: usize) -> Option<MutRefVector<'a>>;
 
     /// Transform all rows in the matrix using some func
-    fn mutate_rows<'a, F>(&'a mut self, func: F) -> Result<()>
+    fn mutate_rows<F>(&mut self, func: F) -> Result<()>
     where
         F: Fn(usize, MutRefVector<'_>) -> Result<()>,
     {
@@ -37,6 +47,37 @@ pub trait Matrix {
             func(i, self.row_mut(i).unwrap())?;
         }
         Ok(())
+    }
+
+    /// Pivot the matrix around element i,j.
+    fn pivot(&mut self, i: usize, j: usize) -> Result<()> {
+        // Scale the given row so that i,j is 1.0
+        if let Some(mut row) = self.row_mut(i) {
+            if let Some(scale) = row.get(j) {
+                if scale.abs() < EPS {
+                    return Err(anyhow!("cannot pivot around zero element"));
+                }
+                row.scale(1. / scale)?;
+            } else {
+                return Err(anyhow!("invalid column index {}", j));
+            }
+        } else {
+            return Err(anyhow!("invalid row index {}", i));
+        }
+
+        // get the pivot row and -column.
+        let pivot_row = self
+            .row_owned(i)
+            .expect("we have already established that i is valid");
+        let pivot_element = pivot_row.get_unchecked(j);
+
+        // Transform all other rows so that j is 0.
+        self.mutate_rows(|ix, mut row| {
+            if ix != i {
+                row.add(&pivot_row * (-row.get_unchecked(j) / pivot_element))?;
+            }
+            Ok(())
+        })
     }
 
     /// Returns the value of a given element in the matrix
