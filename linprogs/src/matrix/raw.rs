@@ -1,9 +1,6 @@
 use anyhow::{Result, anyhow};
 
-use crate::matrix::{
-    Matrix, Vector,
-    vector::{MutRefVector, MutVector, RefVector},
-};
+use crate::matrix::{Matrix, Vector, vector::MutVector};
 
 #[derive(Debug)]
 pub struct RawMatrix {
@@ -27,17 +24,11 @@ impl RawMatrix {
 
     /// Scale a row in the matrix in-place.
     pub fn scale_row(&mut self, i: usize, scale: f64) -> Result<()> {
-        match self.row_mut(i) {
-            Some(mut row) => row.scale(scale),
-            None => Err(anyhow!("row index {} is out of bounds", i)),
-        }
+        self.row_mut(i)?.scale(scale)
     }
 
     pub fn add_row<T: Vector>(&mut self, i: usize, to_add: T) -> Result<()> {
-        match self.row_mut(i) {
-            Some(mut row) => row.add(to_add),
-            None => Err(anyhow!("row index {} is out of bounds", i)),
-        }
+        self.row_mut(i)?.add(to_add)
     }
 }
 
@@ -54,31 +45,35 @@ impl Matrix for RawMatrix {
         self.n
     }
 
-    fn row(&self, i: usize) -> Option<impl Vector> {
-        if i >= self.m {
-            return None;
+    fn get(&self, i: usize, j: usize) -> Result<f64> {
+        if i >= self.m() || j >= self.n() {
+            return Err(anyhow!("invalid index of matrix: ({}, {})", i, j));
         }
-        Some(RefVector::from(
-            &self.values[self.m * i..(self.m * i + self.n)],
-        ))
+        Ok(self.get_unchecked(i, j))
     }
 
-    fn row_mut(&mut self, i: usize) -> Option<impl MutVector> {
+    fn get_unchecked(&self, i: usize, j: usize) -> f64 {
+        self.values[i * self.n() + j]
+    }
+
+    fn row(&self, i: usize) -> Result<impl Vector> {
         if i >= self.m {
-            return None;
+            return Err(anyhow!("invalid row index {}", i));
         }
-        Some(MutRefVector::from(
-            &mut self.values[self.m * i..(self.m * i + self.n)],
-        ))
+        Ok(&self.values[self.m * i..(self.m * i + self.n)])
+    }
+
+    fn row_mut(&mut self, i: usize) -> Result<impl MutVector> {
+        if i >= self.m {
+            return Err(anyhow!("invalid row index {}", i));
+        }
+        Ok(&mut self.values[self.m * i..(self.m * i + self.n)])
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::matrix::{
-        utils::{self, assert_mat_eq, assert_vec_eq},
-        vector::OwnedVector,
-    };
+    use crate::matrix::utils::{self, assert_mat_eq, assert_vec_eq};
 
     use num::ToPrimitive;
 
@@ -104,7 +99,7 @@ mod tests {
         let expected = &[3., 4.];
 
         let row = mat.row(1);
-        assert!(row.is_some());
+        assert!(row.is_ok());
         let row = row.unwrap();
 
         assert_vec_eq(&row, expected);
@@ -117,7 +112,7 @@ mod tests {
         let mat = RawMatrix::try_new(values.into(), 2, 2).unwrap();
 
         let row = mat.row(2);
-        assert!(row.is_none());
+        assert!(row.is_err());
     }
 
     #[test]
@@ -137,7 +132,7 @@ mod tests {
         let values = [1., 2., 3., 4.];
 
         let mut mat = RawMatrix::try_new(values.into(), 2, 2).unwrap();
-        let to_add: OwnedVector = [3., 3.].into();
+        let to_add = [3., 3.];
 
         assert!(mat.add_row(0, to_add).is_ok());
 

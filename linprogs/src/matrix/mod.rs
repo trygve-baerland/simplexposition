@@ -5,7 +5,7 @@ use anyhow::{Result, anyhow};
 pub use raw::RawMatrix;
 pub use vector::{MutVector, Vector};
 
-use crate::matrix::vector::{MutRefVector, OwnedVector};
+use crate::matrix::vector::VectorView;
 
 const EPS: f64 = 1E-8;
 
@@ -19,15 +19,20 @@ pub trait Matrix {
     /// Returns the number of columns in the matrix
     fn n(&self) -> usize;
 
-    /// Returns a readonly view of a row in the matrix
-    fn row(&self, i: usize) -> Option<impl Vector>;
+    /// Returns the value of the i,j element in the matrix
+    fn get(&self, i: usize, j: usize) -> Result<f64>;
+
+    /// Returns the value of the i,j element in the matrix without
+    /// checking bounds.
+    fn get_unchecked(&self, i: usize, j: usize) -> f64;
+
+    /// Returns the i'th row vector of the matrix
+    fn row(&self, i: usize) -> Result<impl Vector>;
 
     /// Returns a copy of the i'th row of the matrix
-    fn row_owned(&self, i: usize) -> Result<OwnedVector> {
-        if let Some(row) = self.row(i) {
-            return Ok(row.values().into());
-        }
-        Err(anyhow!("invalid row index {}", i))
+    fn row_owned(&self, i: usize) -> Result<Vec<f64>> {
+        let row = self.row(i)?;
+        Ok((0..self.n()).map(|j| row.get_unchecked(j)).collect())
     }
 
     /// Returns an iterator over all rows in the matrix
@@ -36,53 +41,44 @@ pub trait Matrix {
     }
 
     /// Returns a writable view of a row in the matrix
-    fn row_mut(&mut self, i: usize) -> Option<impl MutVector>;
+    fn row_mut(&mut self, i: usize) -> Result<impl MutVector>;
 
     /// Transform all rows in the matrix using some func
     fn mutate_rows<F>(&mut self, func: F) -> Result<()>
     where
-        F: Fn(usize, MutRefVector<'_>) -> Result<()>,
+        F: Fn(usize, &mut [f64]) -> Result<()>,
     {
         for i in 0..self.m() {
-            func(i, self.row_mut(i).unwrap().values_mut().into())?;
+            func(i, self.row_mut(i).unwrap().as_mut_slice())?;
         }
         Ok(())
     }
 
     /// Pivot the matrix around element i,j.
     fn pivot(&mut self, i: usize, j: usize) -> Result<()> {
-        // Scale the given row so that i,j is 1.0
-        if let Some(mut row) = self.row_mut(i) {
-            if let Some(scale) = row.get(j) {
-                if scale.abs() < EPS {
-                    return Err(anyhow!("cannot pivot around zero element"));
-                }
-                row.scale(1. / scale)?;
-            } else {
-                return Err(anyhow!("invalid column index {}", j));
-            }
-        } else {
-            return Err(anyhow!("invalid row index {}", i));
+        let mut row = self.row_mut(i)?;
+        let scale = row.get(j)?;
+
+        if scale.abs() < EPS {
+            return Err(anyhow!("cannot pivot around zero element"));
         }
+        row.scale(1. / scale)?;
+        drop(row);
 
         // get the pivot row and -column.
-        let pivot_row = self
+        let pivot_row: VectorView<_> = self
             .row_owned(i)
-            .expect("we have already established that i is valid");
+            .expect("we have already established that i is valid")
+            .into();
         let pivot_element = pivot_row.get_unchecked(j);
 
         // Transform all other rows so that j is 0.
-        self.mutate_rows(|ix, mut row| {
+        self.mutate_rows(|ix, mut r| {
             if ix != i {
-                row.add(&pivot_row * (-row.get_unchecked(j) / pivot_element))?;
+                r.add(&pivot_row * (-r.get_unchecked(j) / pivot_element))?;
             }
             Ok(())
         })
-    }
-
-    /// Returns the value of a given element in the matrix
-    fn get(&self, i: usize, j: usize) -> Option<f64> {
-        self.row(i)?.get(j)
     }
 }
 
@@ -97,8 +93,9 @@ mod utils {
             expected.len(),
             "actual and expected did not have same length"
         );
-
-        for (ix, (a, e)) in vec.values().iter().zip(expected).enumerate() {
+        for ix in 0..vec.n() {
+            let a = vec.get_unchecked(ix);
+            let e = expected[ix];
             assert!(
                 (a - e).abs() < EPS,
                 "vector element at index {} was not as expected.\n\texpected: {}\n\tactual: {}",

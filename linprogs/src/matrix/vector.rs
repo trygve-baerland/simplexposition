@@ -3,24 +3,33 @@ use std::ops::Mul;
 use anyhow::{Result, anyhow};
 
 pub trait Vector {
-    fn values(&self) -> &[f64];
-
     fn n(&self) -> usize;
 
-    fn get(&self, index: usize) -> Option<f64> {
-        self.values().get(index).copied()
-    }
+    fn get_unchecked(&self, index: usize) -> f64;
 
-    fn get_unchecked(&self, index: usize) -> f64 {
-        self.values()[index]
+    fn get(&self, index: usize) -> Result<f64> {
+        if index >= self.n() {
+            return Err(anyhow!("invalid index {}", index));
+        }
+        Ok(self.get_unchecked(index))
     }
 }
 
 pub trait MutVector: Vector {
-    fn values_mut(&mut self) -> &mut [f64];
+    fn get_mut_unchecked(&mut self, i: usize) -> &mut f64;
+
+    fn get_mut(&mut self, i: usize) -> Result<&mut f64> {
+        if i >= self.n() {
+            return Err(anyhow!("invalid index {}", i));
+        }
+        Ok(self.get_mut_unchecked(i))
+    }
+
+    fn as_mut_slice(&mut self) -> &mut [f64];
 
     fn scale(&mut self, scale: f64) -> Result<()> {
-        for v in self.values_mut() {
+        for i in 0..self.n() {
+            let v = self.get_mut_unchecked(i);
             *v *= scale;
         }
         Ok(())
@@ -34,125 +43,127 @@ pub trait MutVector: Vector {
                 self.n()
             ));
         }
-        for (v, a) in self.values_mut().iter_mut().zip(to_add.values()) {
+        for i in 0..self.n() {
+            let v = self.get_mut_unchecked(i);
+            let a = to_add.get_unchecked(i);
             *v += a;
         }
         Ok(())
     }
 }
 
-#[allow(unused)]
-#[derive(Debug)]
-pub struct OwnedVector {
-    values: Vec<f64>,
-}
-
-impl From<&[f64]> for OwnedVector {
-    fn from(value: &[f64]) -> Self {
-        Self {
-            values: value.into(),
-        }
-    }
-}
-
-impl From<Vec<f64>> for OwnedVector {
-    fn from(value: Vec<f64>) -> Self {
-        Self { values: value }
-    }
-}
-
-impl<const N: usize> From<[f64; N]> for OwnedVector {
-    fn from(value: [f64; N]) -> Self {
-        Self {
-            values: value.into(),
-        }
-    }
-}
-
-impl<'a> From<RefVector<'a>> for OwnedVector {
-    fn from(value: RefVector<'a>) -> Self {
-        Self {
-            values: value.values().into(),
-        }
-    }
-}
-
-impl Vector for OwnedVector {
+impl Vector for Vec<f64> {
     fn n(&self) -> usize {
-        self.values.len()
+        self.len()
     }
 
-    fn values(&self) -> &[f64] {
-        &self.values
-    }
-}
-
-impl MutVector for OwnedVector {
-    fn values_mut(&mut self) -> &mut [f64] {
-        self.values.as_mut_slice()
+    fn get_unchecked(&self, index: usize) -> f64 {
+        self[index]
     }
 }
 
-impl FromIterator<f64> for OwnedVector {
-    fn from_iter<T: IntoIterator<Item = f64>>(iter: T) -> Self {
-        Self {
-            values: iter.into_iter().collect(),
-        }
+impl MutVector for Vec<f64> {
+    fn get_mut_unchecked(&mut self, i: usize) -> &mut f64 {
+        &mut self[i]
+    }
+
+    fn as_mut_slice(&mut self) -> &mut [f64] {
+        self.as_mut_slice()
     }
 }
 
-impl Mul<f64> for &OwnedVector {
-    type Output = OwnedVector;
+impl<const N: usize> Vector for &[f64; N] {
+    fn n(&self) -> usize {
+        self.len()
+    }
+
+    fn get_unchecked(&self, index: usize) -> f64 {
+        self[index]
+    }
+}
+
+impl<const N: usize> Vector for [f64; N] {
+    fn n(&self) -> usize {
+        self.len()
+    }
+
+    fn get_unchecked(&self, index: usize) -> f64 {
+        self[index]
+    }
+}
+
+impl Vector for &[f64] {
+    fn n(&self) -> usize {
+        self.len()
+    }
+
+    fn get_unchecked(&self, index: usize) -> f64 {
+        self[index]
+    }
+}
+
+impl Vector for &mut [f64] {
+    fn n(&self) -> usize {
+        self.len()
+    }
+
+    fn get_unchecked(&self, index: usize) -> f64 {
+        self[index]
+    }
+}
+
+impl MutVector for &mut [f64] {
+    fn get_mut_unchecked(&mut self, i: usize) -> &mut f64 {
+        &mut self[i]
+    }
+
+    fn as_mut_slice(&mut self) -> &mut [f64] {
+        self
+    }
+}
+
+#[derive(Debug)]
+pub struct VectorView<T>(T);
+
+impl<T: Vector> From<T> for VectorView<T> {
+    fn from(value: T) -> Self {
+        Self(value)
+    }
+}
+
+impl<T: Vector> Vector for VectorView<T> {
+    fn n(&self) -> usize {
+        self.0.n()
+    }
+
+    fn get_unchecked(&self, index: usize) -> f64 {
+        self.0.get_unchecked(index)
+    }
+}
+
+impl<T: MutVector> MutVector for VectorView<T> {
+    fn get_mut_unchecked(&mut self, i: usize) -> &mut f64 {
+        self.0.get_mut_unchecked(i)
+    }
+
+    fn as_mut_slice(&mut self) -> &mut [f64] {
+        self.0.as_mut_slice()
+    }
+}
+
+impl<T: Vector> Mul<f64> for VectorView<T> {
+    type Output = Vec<f64>;
 
     fn mul(self, rhs: f64) -> Self::Output {
-        self.values().iter().copied().map(|el| rhs * el).collect()
+        (0..self.n()).map(|i| self.get_unchecked(i) * rhs).collect()
     }
 }
 
-#[derive(Debug)]
-pub struct MutRefVector<'a> {
-    values: &'a mut [f64],
-}
+impl<T: Vector> Mul<f64> for &VectorView<T> {
+    type Output = Vec<f64>;
 
-impl<'a> From<&'a mut [f64]> for MutRefVector<'a> {
-    fn from(value: &'a mut [f64]) -> Self {
-        Self { values: value }
-    }
-}
-
-impl<'a> Vector for MutRefVector<'a> {
-    fn values(&self) -> &[f64] {
-        self.values
-    }
-    fn n(&self) -> usize {
-        self.values.len()
-    }
-}
-
-impl<'a> MutVector for MutRefVector<'a> {
-    fn values_mut(&mut self) -> &mut [f64] {
-        self.values
-    }
-}
-
-#[derive(Debug)]
-pub struct RefVector<'a> {
-    values: &'a [f64],
-}
-
-impl<'a> From<&'a [f64]> for RefVector<'a> {
-    fn from(value: &'a [f64]) -> Self {
-        Self { values: value }
-    }
-}
-
-impl<'a> Vector for RefVector<'a> {
-    fn values(&self) -> &[f64] {
-        self.values
-    }
-
-    fn n(&self) -> usize {
-        self.values.len()
+    fn mul(self, rhs: f64) -> Self::Output {
+        (0..self.n()).map(|i| self.get_unchecked(i) * rhs).collect()
     }
 }
 
@@ -160,47 +171,31 @@ impl<'a> Vector for RefVector<'a> {
 mod tests {
     use crate::matrix::utils::assert_vec_eq;
 
-    use super::*;
-
-    mod owned {
+    mod vector {
 
         use super::*;
 
         #[test]
         fn from_vec() {
-            let values: Vec<f64> = [1., 2., 3.].into();
+            let values = vec![1., 2., 3.];
             let expected = &[1., 2., 3.];
 
-            let result = OwnedVector::from(values);
-            assert_vec_eq(&result, expected);
+            assert_vec_eq(&values, expected);
         }
 
         #[test]
         fn from_slice() {
             let values = &[1., 2., 3.];
+            let expected = &[1., 2., 3.];
 
-            let result = OwnedVector::from(values.as_slice());
-            assert_vec_eq(&result, values);
+            assert_vec_eq(&values, expected);
         }
 
         #[test]
         fn from_array() {
             let values = [1., 2., 3.];
 
-            let result = OwnedVector::from(values);
-            assert_vec_eq(&result, &[1., 2., 3.])
-        }
-    }
-
-    mod ref_vector {
-        use super::*;
-
-        #[test]
-        fn from_slice() {
-            let values: &[f64] = &[1., 2., 3.];
-
-            let result = RefVector::from(values);
-            assert_vec_eq(&result, values);
+            assert_vec_eq(&values, &[1., 2., 3.])
         }
     }
 }
