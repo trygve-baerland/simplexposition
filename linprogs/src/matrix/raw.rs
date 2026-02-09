@@ -22,6 +22,34 @@ impl RawMatrix {
         Ok(RawMatrix { values, n, m })
     }
 
+    pub fn try_from_rows<I, T>(rows: I) -> Result<RawMatrix>
+    where
+        T: Vector,
+        I: IntoIterator<Item = T>,
+    {
+        let mut values = Vec::new();
+
+        let mut n = None;
+        let mut m = 0;
+
+        for row in rows {
+            if n.is_none() {
+                n = Some(row.n());
+            } else if n.unwrap() != row.n() {
+                return Err(anyhow!("mismatched row lengths"));
+            }
+            for j in 0..row.n() {
+                values.push(row.get_unchecked(j));
+            }
+            m += 1;
+        }
+        Ok(Self {
+            values,
+            n: n.unwrap_or(0),
+            m: m,
+        })
+    }
+
     /// Scale a row in the matrix in-place.
     pub fn scale_row(&mut self, i: usize, scale: f64) -> Result<()> {
         self.row_mut(i)?.scale(scale)
@@ -85,6 +113,15 @@ mod tests {
     fn try_new_invalid() {
         let values = [1., 2., 3., 4.];
         assert!(RawMatrix::try_new(values.into(), 3, 1).is_err());
+    }
+
+    #[test]
+    fn try_from_rows() {
+        let rows = [[1., 2., 3.], [4., 5., 6.]];
+
+        let mat = RawMatrix::try_from_rows(rows).expect("should be valid");
+
+        assert_mat_eq(&mat, &[1., 2., 3., 4., 5., 6.]);
     }
 
     #[test]
