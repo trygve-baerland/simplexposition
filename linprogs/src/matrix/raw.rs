@@ -33,10 +33,6 @@ impl RawMatrix {
 }
 
 impl Matrix for RawMatrix {
-    /// Return the underlying values of the matrix
-    fn values(&self) -> &[f64] {
-        &self.values
-    }
     fn m(&self) -> usize {
         self.m
     }

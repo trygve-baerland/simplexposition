@@ -10,9 +10,6 @@ use crate::matrix::vector::VectorView;
 const EPS: f64 = 1E-8;
 
 pub trait Matrix {
-    /// Returns all elements in the matrix as a flattened slice
-    fn values(&self) -> &[f64];
-
     /// Returns the number of rows in the matrix
     fn m(&self) -> usize;
 
@@ -108,20 +105,24 @@ mod utils {
 
     pub fn assert_mat_eq<M: Matrix>(mat: &M, expected: &[f64]) -> () {
         assert_eq!(
-            mat.values().len(),
+            mat.n() * mat.m(),
             expected.len(),
             "actual and expected did not have same length"
         );
 
-        for (ix, (a, e)) in mat.values().iter().zip(expected).enumerate() {
-            assert!(
-                (a - e).abs() < EPS,
-                "matrix element at row {} and column {} was not as expected.\n\texpected: {}\n\tactual: {}",
-                ix / mat.n(),
-                ix % mat.n(),
-                e,
-                a
-            )
+        for ix in 0..mat.m() {
+            for jx in 0..mat.n() {
+                let a = mat.get_unchecked(ix, jx);
+                let e = expected[jx + mat.n() * ix];
+                assert!(
+                    (a - e).abs() < EPS,
+                    "matrix element at row {} and column {} was not as expected.\n\texpected: {}\n\tactual: {}",
+                    ix / mat.n(),
+                    ix % mat.n(),
+                    e,
+                    a
+                );
+            }
         }
     }
 }
