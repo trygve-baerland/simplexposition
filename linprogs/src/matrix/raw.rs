@@ -35,7 +35,9 @@ impl RawMatrix {
         for row in rows {
             if n.is_none() {
                 n = Some(row.n());
-            } else if n.unwrap() != row.n() {
+            } else if let Some(n) = n
+                && n != row.n()
+            {
                 return Err(anyhow!("mismatched row lengths"));
             }
             for j in 0..row.n() {
@@ -46,7 +48,7 @@ impl RawMatrix {
         Ok(Self {
             values,
             n: n.unwrap_or(0),
-            m: m,
+            m,
         })
     }
 
