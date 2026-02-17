@@ -22,6 +22,16 @@ impl RawMatrix {
         Ok(RawMatrix { values, n, m })
     }
 
+    pub fn eye(n: usize) -> Self {
+        let mut values = vec![0.; n * n];
+
+        for i in 0..n {
+            values[i + i * n] = 1.0;
+        }
+
+        Self { values, n, m: n }
+    }
+
     pub fn try_from_rows<I, T>(rows: I) -> Result<RawMatrix>
     where
         T: Vector,
@@ -59,6 +69,14 @@ impl RawMatrix {
 
     pub fn add_row<T: Vector>(&mut self, i: usize, to_add: T) -> Result<()> {
         self.row_mut(i)?.add(to_add)
+    }
+}
+
+impl<const M: usize, const N: usize> From<[[f64; N]; M]> for RawMatrix {
+    fn from(value: [[f64; N]; M]) -> Self {
+        let values = value.into_iter().flatten().collect();
+
+        Self { values, n: N, m: M }
     }
 }
 
@@ -124,6 +142,22 @@ mod tests {
         let mat = RawMatrix::try_from_rows(rows).expect("should be valid");
 
         assert_mat_eq(&mat, &[1., 2., 3., 4., 5., 6.]);
+    }
+
+    #[test]
+    fn from_array() {
+        let values = [[1., 2., 3.], [4., 5., 6.]];
+
+        let mat: RawMatrix = values.into();
+
+        assert_mat_eq(&mat, &[1., 2., 3., 4., 5., 6.]);
+    }
+
+    #[test]
+    fn eye3() {
+        let mat = RawMatrix::eye(3);
+
+        assert_mat_eq(&mat, &[1., 0., 0., 0., 1., 0., 0., 0., 1.]);
     }
 
     #[test]
