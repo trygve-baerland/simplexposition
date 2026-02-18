@@ -117,7 +117,7 @@ impl Matrix for RawMatrix {
 
 #[cfg(test)]
 mod tests {
-    use crate::matrix::utils::{self, assert_mat_eq, assert_vec_eq};
+    use crate::matrix::asserts::{self, assert_mat_eq, assert_vec_eq};
 
     use num::ToPrimitive;
 
@@ -206,7 +206,7 @@ mod tests {
         assert!(mat.add_row(0, to_add).is_ok());
 
         let expected = [4., 5., 3., 4.];
-        utils::assert_mat_eq(&mat, &expected);
+        asserts::assert_mat_eq(&mat, &expected);
     }
 
     #[test]

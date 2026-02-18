@@ -169,7 +169,7 @@ impl<T: Vector> Mul<f64> for &VectorView<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::matrix::utils::assert_vec_eq;
+    use crate::matrix::asserts::assert_vec_eq;
 
     mod vector {
 

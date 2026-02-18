@@ -1,3 +1,4 @@
+mod block;
 mod raw;
 mod vector;
 
@@ -80,7 +81,7 @@ pub trait Matrix {
 }
 
 #[cfg(test)]
-mod utils {
+mod asserts {
     use crate::matrix::{Matrix, Vector};
     const EPS: f64 = 1E-8;
 
