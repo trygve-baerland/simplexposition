@@ -1,8 +1,7 @@
 /// Returns whether all elements in the iterator are equal or not.
 /// If the iterator is empty, all elements are vacuously equal.
-pub fn all_same<I, T>(mut elems: I) -> bool
+pub fn all_same<T>(mut elems: impl Iterator<Item = T>) -> bool
 where
-    I: Iterator<Item = T>,
     T: PartialEq,
 {
     let Some(first) = elems.next() else {
